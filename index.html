@@ -11,7 +11,8 @@ window.__DAISLY_API_BASE__ = (() => {
   const params = new URLSearchParams(location.search);
   const override = params.get('apiBase') || params.get('api');
   if (override) return override.replace(/\/+$/, '');
-  return location.protocol === 'file:' ? 'https://daisly.space' : '';
+  const host = location.hostname;
+  return location.protocol === 'file:' || host === 'daisly.space' || host === 'www.daisly.space' ? 'https://api.daisly.space' : '';
 })();
 </script>
 <script src="./support.js"></script>
@@ -2837,9 +2838,12 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this.startDeviceClock();
+    this.bindOAuthCallback();
     this.loadLocalSnapshot();
+    this.consumeAuthRedirect();
     this.loadBootstrap();
     this.bindStoreProducts();
+    this.bindNativeStorage();
     this.scheduleI18n();
     this.bindLiveInputs();
     this.syncNativeNotificationsSoon(true);
@@ -2862,6 +2866,7 @@ class Component extends DCLogic {
     clearTimeout(this._sheetStepTimer);
     clearTimeout(this._sheetCloseTimer);
     if (this._storePricesHandler) window.removeEventListener('daislyProductPrices', this._storePricesHandler);
+    if (this._nativeStorageHandler) window.removeEventListener('daislyNativeStorage', this._nativeStorageHandler);
     if (this._inboxDoneTimers) Object.keys(this._inboxDoneTimers).forEach(id => clearTimeout(this._inboxDoneTimers[id]));
     if (this._i18nFrame) cancelAnimationFrame(this._i18nFrame);
     this.setDragSelectionLock(false);
@@ -2954,6 +2959,16 @@ class Component extends DCLogic {
       window.addEventListener('daislyProductPrices', this._storePricesHandler);
     }
     if (window.__DAISLY_PRODUCT_PRICES__) this.applyStoreProducts(window.__DAISLY_PRODUCT_PRICES__);
+  }
+  bindNativeStorage() {
+    if (this._nativeStorageHandler) return;
+    this._nativeStorageHandler = (event) => {
+      if (event && event.detail) {
+        window.__DAISLY_NATIVE_STATE__ = event.detail;
+        this.loadLocalSnapshot();
+      }
+    };
+    window.addEventListener('daislyNativeStorage', this._nativeStorageHandler);
   }
 
   applyStoreProducts(payload) {
@@ -3061,6 +3076,79 @@ class Component extends DCLogic {
       if (!r.ok && !data.error) data.error = 'Request failed';
       return data;
     }).catch(() => ({ ok: false, error: 'Connection failed' }));
+  }
+  bindOAuthCallback() {
+    window.__DAISLY_AUTH_COMPLETE__ = (payload) => this.finishOAuth(payload || {});
+  }
+  oauthReturnUrl() {
+    if (window.__DAISLY_NATIVE__) return 'daisly://auth';
+    try {
+      const url = new URL(window.location.href);
+      ['authToken', 'authError', 'authProvider'].forEach(k => url.searchParams.delete(k));
+      return url.href;
+    } catch (e) {
+      return window.location.href;
+    }
+  }
+  consumeAuthRedirect() {
+    try {
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get('authToken');
+      const error = url.searchParams.get('authError');
+      const provider = url.searchParams.get('authProvider');
+      if (!token && !error) return;
+      ['authToken', 'authError', 'authProvider'].forEach(k => url.searchParams.delete(k));
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      this.finishOAuth({ token, error, provider });
+    } catch (e) {}
+  }
+  startOAuth(provider) {
+    const native = !!window.__DAISLY_NATIVE__;
+    const startUrl = this.apiUrl('/auth/' + provider + '/start?returnUrl=' + encodeURIComponent(this.oauthReturnUrl()) + (native ? '&native=1' : ''));
+    this.setState({ authLoading: true, authError: '' });
+    try {
+      const handler = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daislyAuth;
+      if (native && handler) {
+        handler.postMessage({ url: startUrl, provider });
+        return;
+      }
+    } catch (e) {}
+    window.location.href = startUrl;
+  }
+  finishOAuth(payload) {
+    const token = payload && (payload.token || payload.authToken);
+    const error = payload && (payload.error || payload.authError);
+    if (error) {
+      this.setState({ authLoading: false, authError: String(error) });
+      this.toast('Could not sign in');
+      return;
+    }
+    if (!token) {
+      this.setState({ authLoading: false });
+      return;
+    }
+    fetch(this.apiUrl('/auth/session'), {
+      headers: { Authorization: 'Bearer ' + token }
+    }).then(async r => {
+      let data = null;
+      try { data = await r.json(); } catch (e) {}
+      if (!r.ok || !data || !data.ok) return { ok: false, error: (data && data.error) || 'Could not sign in' };
+      data.token = data.token || token;
+      return data;
+    }).then(data => {
+      if (!data || !data.ok) {
+        this.setState({ authLoading: false, authError: (data && data.error) || 'Could not sign in' });
+        this.toast('Could not sign in');
+        return;
+      }
+      this.setState({ authLoading: false, authError: '', authPassword: '' }, () => {
+        this.applyServerPayload(data);
+        this.toast('Signed in');
+      });
+    }).catch(() => {
+      this.setState({ authLoading: false, authError: 'Connection failed' });
+      this.toast('Connection failed');
+    });
   }
   applyServerPayload(data) {
     if (!data) return;
@@ -4807,8 +4895,8 @@ class Component extends DCLogic {
     const isOb = (s.screen || (this.props.startAt === 'App' ? 'app' : 'ob')) === 'ob';
     const emailAccount = !!(s.auth && s.auth.user && s.auth.user.provider === 'email');
     const needsGoogle = () => {
-      this.api('/api/integrations', { method: 'POST', body: JSON.stringify({ provider: 'google' }) });
-      this.toast('Google Calendar and Tasks need Google sign-in');
+      this.toast('Opening Google sign-in');
+      this.startOAuth('google');
     };
     const chip = (sel) => ({ bg: sel ? 'var(--acc,#5E9478)' : '#FFFFFF', c: sel ? '#FFFFFF' : '#5A655E', bd: sel ? 'var(--acc,#5E9478)' : 'rgba(28,44,34,0.1)' });
 
@@ -5353,8 +5441,8 @@ class Component extends DCLogic {
       obDots, obBackOp: obStep > 0 ? 1 : 0,
       obBack: () => { if (s.obStep > 0) this.setState({ obStep: s.obStep - 1 }); },
       obNext: () => { if (s.obStep === 2 && !s.obName.trim()) return; this.setState({ obStep: s.obStep + 1 }); },
-      obGoogle: () => { this.setState({ obStep: 2 }); this.toast('Signed in with Google'); },
-      obApple: () => { this.setState({ obStep: 2 }); this.toast('Signed in with Apple'); },
+      obGoogle: () => this.startOAuth('google'),
+      obApple: () => this.startOAuth('apple'),
       authPickLogin: () => this.setState({ authMode: 'login', authError: '' }),
       authPickSignup: () => this.setState({ authMode: 'signup', authError: '' }),
       authLoginBg: s.authMode === 'login' ? '#FFFFFF' : 'transparent',

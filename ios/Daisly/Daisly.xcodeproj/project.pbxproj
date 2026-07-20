@@ -17,6 +17,7 @@
 		A1B2C3D40100000100000002 /* DaislyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaislyApp.swift; sourceTree = "<group>"; };
 		A1B2C3D40100000100000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1B2C3D40100000100000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C4D5E6F70100000100000001 /* Daisly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Daisly.entitlements; sourceTree = "<group>"; };
 		A1B2C3D40100000100000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,6 +54,7 @@
 				A1B2C3D40100000100000002 /* DaislyApp.swift */,
 				A1B2C3D40100000100000004 /* ContentView.swift */,
 				A1B2C3D40100000100000008 /* Info.plist */,
+				C4D5E6F70100000100000001 /* Daisly.entitlements */,
 				A1B2C3D40100000100000006 /* Assets.xcassets */,
 			);
 			path = Daisly;
@@ -283,6 +285,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Daisly/Daisly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -311,6 +314,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Daisly/Daisly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "";

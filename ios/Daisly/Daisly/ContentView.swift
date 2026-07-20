@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 import StoreKit
 import UIKit
@@ -75,8 +76,11 @@ struct DaislyWebView: UIViewRepresentable {
         configuration.userContentController.add(context.coordinator, name: "daislyHaptic")
         configuration.userContentController.add(context.coordinator, name: "daislyStorage")
         configuration.userContentController.add(context.coordinator, name: "daislyNotifications")
+        configuration.userContentController.add(context.coordinator, name: "daislyAuth")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        context.coordinator.webView = webView
+        context.coordinator.startICloudSync()
         webView.allowsBackForwardNavigationGestures = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.bounces = false
@@ -97,26 +101,62 @@ struct DaislyWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
     private static func nativeStorageJSON() -> String {
+        let store = NSUbiquitousKeyValueStore.default
+        store.synchronize()
+
+        let local = validSnapshotString(UserDefaults.standard.string(forKey: nativeStorageKey))
+        let cloud = validSnapshotString(store.string(forKey: nativeStorageKey))
+        let snapshots = [local, cloud].compactMap { value -> (value: String, savedAt: Double)? in
+            guard let value else { return nil }
+            return (value, snapshotSavedAt(value))
+        }
+
+        return snapshots.max { $0.savedAt < $1.savedAt }?.value ?? "null"
+    }
+
+    private static func validSnapshotString(_ value: String?) -> String? {
         guard
-            let value = UserDefaults.standard.string(forKey: nativeStorageKey),
+            let value,
             let data = value.data(using: .utf8),
-            (try? JSONSerialization.jsonObject(with: data)) != nil
+            let object = try? JSONSerialization.jsonObject(with: data),
+            JSONSerialization.isValidJSONObject(object)
         else {
-            return "null"
+            return nil
         }
 
         return value
     }
 
-    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, UNUserNotificationCenterDelegate {
+    private static func snapshotSavedAt(_ value: String) -> Double {
+        guard
+            let data = value.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return 0
+        }
+
+        if let number = object["savedAt"] as? NSNumber {
+            return number.doubleValue
+        }
+        return object["savedAt"] as? Double ?? 0
+    }
+
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, UNUserNotificationCenterDelegate, ASWebAuthenticationPresentationContextProviding {
         private let monthlyProductID = "daisly_pro_monthly"
         private let yearlyProductID = "daisly_pro_yearly"
         private let notificationPrefix = "daisly-task-"
         var onReady: () -> Void
+        weak var webView: WKWebView?
         private var didNotifyReady = false
+        private var authSession: ASWebAuthenticationSession?
+        private var observesICloudStore = false
 
         init(onReady: @escaping () -> Void) {
             self.onReady = onReady
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -127,9 +167,27 @@ struct DaislyWebView: UIViewRepresentable {
                 handleStorage(message.body)
             case "daislyNotifications":
                 handleNotifications(message.body)
+            case "daislyAuth":
+                handleAuth(message.body)
             default:
                 break
             }
+        }
+
+        func startICloudSync() {
+            NSUbiquitousKeyValueStore.default.synchronize()
+            guard !observesICloudStore else { return }
+            observesICloudStore = true
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(iCloudStoreDidChange(_:)),
+                name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+                object: NSUbiquitousKeyValueStore.default
+            )
+        }
+
+        @objc private func iCloudStoreDidChange(_ notification: Notification) {
+            publishNativeSnapshot()
         }
 
         private func handleHaptic(_ body: Any) {
@@ -149,6 +207,89 @@ struct DaislyWebView: UIViewRepresentable {
             }
 
             UserDefaults.standard.set(value, forKey: DaislyWebView.nativeStorageKey)
+            let store = NSUbiquitousKeyValueStore.default
+            store.set(value, forKey: DaislyWebView.nativeStorageKey)
+            store.synchronize()
+        }
+
+        private func handleAuth(_ body: Any) {
+            guard
+                let payload = body as? [String: Any],
+                let rawURL = payload["url"] as? String,
+                let url = URL(string: rawURL)
+            else {
+                completeAuth(error: "Could not start sign in")
+                return
+            }
+
+            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "daisly") { [weak self] callbackURL, error in
+                DispatchQueue.main.async {
+                    if let callbackURL {
+                        self?.completeAuth(with: callbackURL)
+                    } else if (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin {
+                        self?.completeAuth(error: "Sign in cancelled")
+                    } else {
+                        self?.completeAuth(error: "Could not sign in")
+                    }
+                    self?.authSession = nil
+                }
+            }
+            session.presentationContextProvider = self
+            session.prefersEphemeralWebBrowserSession = false
+            authSession = session
+
+            if !session.start() {
+                authSession = nil
+                completeAuth(error: "Could not start sign in")
+            }
+        }
+
+        private func completeAuth(with callbackURL: URL) {
+            let queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems ?? []
+            var payload: [String: String] = [:]
+            for item in queryItems {
+                payload[item.name] = item.value ?? ""
+            }
+            injectAuthPayload(payload)
+        }
+
+        private func completeAuth(error: String) {
+            injectAuthPayload(["authError": error])
+        }
+
+        private func injectAuthPayload(_ payload: [String: String]) {
+            guard
+                JSONSerialization.isValidJSONObject(payload),
+                let data = try? JSONSerialization.data(withJSONObject: payload),
+                let json = String(data: data, encoding: .utf8)
+            else { return }
+
+            DispatchQueue.main.async { [weak self] in
+                self?.webView?.evaluateJavaScript("""
+                if (window.__DAISLY_AUTH_COMPLETE__) {
+                  window.__DAISLY_AUTH_COMPLETE__(\(json));
+                }
+                """, completionHandler: nil)
+            }
+        }
+
+        private func publishNativeSnapshot() {
+            let json = DaislyWebView.nativeStorageJSON()
+            DispatchQueue.main.async { [weak self] in
+                self?.webView?.evaluateJavaScript("""
+                window.__DAISLY_NATIVE_STATE__ = \(json);
+                window.dispatchEvent(new CustomEvent('daislyNativeStorage', { detail: window.__DAISLY_NATIVE_STATE__ }));
+                """, completionHandler: nil)
+            }
+        }
+
+        func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+            if let window = webView?.window {
+                return window
+            }
+
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            return scenes.flatMap(\.windows).first { $0.isKeyWindow } ?? UIWindow()
         }
 
         private func handleNotifications(_ body: Any) {

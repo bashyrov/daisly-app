@@ -18,6 +18,10 @@ services:
         value: https://daisly.space
       - key: PUBLIC_API_URL
         value: https://api.daisly.space
+      - key: OAUTH_NATIVE_RETURN_URL
+        value: daisly://auth
+      - key: OAUTH_STATE_SECRET
+        sync: false
       - key: PRIVACY_POLICY_URL
         value: https://daisly.space/privacy
       - key: TERMS_OF_SERVICE_URL
@@ -50,7 +54,13 @@ services:
         value: com.daisly.app.web
       - key: APPLE_SIGNIN_KEY_ID
         sync: false
+      - key: APPLE_SIGNIN_PRIVATE_KEY
+        sync: false
+      - key: APPLE_REDIRECT_URI
+        value: https://api.daisly.space/auth/apple/callback
       - key: APPLE_APNS_KEY_ID
+        sync: false
+      - key: APPLE_APNS_PRIVATE_KEY
         sync: false
       - key: REVENUECAT_PUBLIC_SDK_KEY
         sync: false
