@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: daisly-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STORAGE_MODE
+        value: supabase
+      - key: DAISLY_STATE_KEY
+        value: production
+      - key: PUBLIC_APP_URL
+        value: https://daisly.space
+      - key: PUBLIC_SITE_URL
+        value: https://daisly.space
+      - key: PUBLIC_API_URL
+        value: https://api.daisly.space
+      - key: PRIVACY_POLICY_URL
+        value: https://daisly.space/privacy
+      - key: TERMS_OF_SERVICE_URL
+        value: https://daisly.space/terms
+      - key: SUPPORT_EMAIL
+        value: support@daisly.space
+      - key: CORS_ORIGIN
+        value: https://daisly.space,https://www.daisly.space,null
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: GOOGLE_IOS_CLIENT_ID
+        sync: false
+      - key: GOOGLE_IOS_URL_SCHEME
+        sync: false
+      - key: GOOGLE_WEB_CLIENT_ID
+        sync: false
+      - key: GOOGLE_WEB_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://api.daisly.space/auth/google/callback
+      - key: APPLE_TEAM_ID
+        sync: false
+      - key: APPLE_BUNDLE_ID
+        value: com.daisly.app
+      - key: APPLE_SERVICES_ID
+        value: com.daisly.app.web
+      - key: APPLE_SIGNIN_KEY_ID
+        sync: false
+      - key: APPLE_APNS_KEY_ID
+        sync: false
+      - key: REVENUECAT_PUBLIC_SDK_KEY
+        sync: false
+      - key: REVENUECAT_SECRET_API_KEY
+        sync: false
+      - key: REVENUECAT_ENTITLEMENT_ID
+        sync: false
+      - key: PRODUCT_ID_MONTHLY
+        value: daisly_pro_monthly
+      - key: PRODUCT_ID_YEARLY
+        value: daisly_pro_yearly

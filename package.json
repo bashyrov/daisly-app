@@ -1,0 +1,10 @@
+{
+  "name": "daisly-backend-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "deploy:check": "node scripts/validate-deploy.mjs"
+  }
+}

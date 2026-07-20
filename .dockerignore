@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+daisly-credentials.local.env
+ios/Daisly/DerivedData
+ios/Daisly/**/*.xcuserstate
+ios/Daisly/**/xcuserdata
+landing/__pycache__
+*.log
+node_modules

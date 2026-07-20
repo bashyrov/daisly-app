@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8faf2" />
+    <title>Structure</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="phone" aria-label="iPhone app preview">
+      <div class="status-bar" aria-hidden="true">
+        <span>22:59</span>
+        <div class="status-icons">
+          <span class="signal">••••</span>
+          <span class="wifi"></span>
+          <span class="battery"></span>
+        </div>
+      </div>
+
+      <section class="screen is-active" data-screen="onboarding">
+        <div class="onboarding">
+          <div class="hero-badge">✓</div>
+          <h1>Structure</h1>
+          <p>План дня, входящие задачи и группы в одном спокойном ритме.</p>
+          <div class="onboarding-card">
+            <div class="mini-row">
+              <span class="dot green"></span>
+              <strong>Подъем</strong>
+              <small>07:30</small>
+            </div>
+            <div class="mini-row">
+              <span class="dot orange"></span>
+              <strong>Фокус</strong>
+              <small>10:00</small>
+            </div>
+            <div class="mini-row">
+              <span class="dot pink"></span>
+              <strong>Сон</strong>
+              <small>23:00</small>
+            </div>
+          </div>
+          <button class="auth-button apple" data-start>Войти с Apple</button>
+          <button class="auth-button google" data-start>Продолжить с Google</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="inbox">
+        <header class="top">
+          <div>
+            <p>Добрый вечер</p>
+            <h2>Сашулька</h2>
+          </div>
+          <div class="top-actions">
+            <span class="streak">🔥 23</span>
+            <span class="avatar">A</span>
+          </div>
+        </header>
+
+        <div class="day-switch">
+          <button aria-label="Previous day">‹</button>
+          <strong>Входящие</strong>
+          <button class="muted" aria-label="Next day">›</button>
+        </div>
+
+        <article class="card summary-card">
+          <div class="ring" style="--progress: 73">
+            <span>8</span>
+            <small>/ 11 задач</small>
+          </div>
+          <div>
+            <p>Готово сегодня</p>
+            <h3>73%</h3>
+            <p class="sub">3 спонтанные задачи ждут времени</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <h3>Спонтанные</h3>
+            <span>3</span>
+          </div>
+          <div class="task done">
+            <button class="check is-done" aria-label="Completed">✓</button>
+            <div>
+              <strong>Ответить Марку</strong>
+              <p>15 мин · task</p>
+            </div>
+            <span class="task-icon green">✉</span>
+          </div>
+          <div class="task">
+            <button class="check" data-complete aria-label="Mark done">✓</button>
+            <div>
+              <strong>Купить кофе домой</strong>
+              <p>20 мин · break</p>
+            </div>
+            <span class="task-icon orange">☕</span>
+          </div>
+          <div class="task">
+            <button class="check" data-complete aria-label="Mark done">✓</button>
+            <div>
+              <strong>Идеи для отпуска</strong>
+              <p>30 мин · focus</p>
+            </div>
+            <span class="task-icon pink">✦</span>
+          </div>
+        </article>
+
+        <article class="card goal-card">
+          <div>
+            <h3>Утренний план</h3>
+            <p>Задача создана при onboarding и повторяется каждый день</p>
+          </div>
+          <span>›</span>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="timeline">
+        <header class="compact-title">
+          <button class="round">‹</button>
+          <h2>Таймлайн</h2>
+          <button class="round muted">›</button>
+        </header>
+
+        <div class="week-strip">
+          <button><small>Пн</small><strong>1</strong></button>
+          <button><small>Вт</small><strong>2</strong></button>
+          <button><small>Ср</small><strong>3</strong></button>
+          <button class="active"><small>Сегодня</small><strong>6</strong></button>
+          <button><small>Пт</small><strong>7</strong></button>
+          <button><small>Сб</small><strong>8</strong></button>
+          <button><small>Вс</small><strong>9</strong></button>
+        </div>
+
+        <article class="card timeline-card">
+          <div class="timeline-item">
+            <time>07:30</time>
+            <button class="check is-done" aria-label="Completed">✓</button>
+            <div class="slot done">
+              <span class="task-icon green">☀</span>
+              <div>
+                <strong>Подъем</strong>
+                <p>30 мин · routine</p>
+              </div>
+            </div>
+          </div>
+          <div class="connector"></div>
+          <div class="timeline-item current">
+            <time>10:00</time>
+            <button class="check" data-complete aria-label="Mark done">✓</button>
+            <div class="slot progress" data-detail>
+              <span class="task-icon orange">⌁</span>
+              <div>
+                <strong>Глубокая работа</strong>
+                <p>1 ч 30 мин · focus</p>
+              </div>
+            </div>
+          </div>
+          <div class="connector"></div>
+          <div class="timeline-item">
+            <time>15:00</time>
+            <button class="check" data-complete aria-label="Mark done">✓</button>
+            <div class="slot">
+              <span class="task-icon blue">☏</span>
+              <div>
+                <strong>Звонок с командой</strong>
+                <p>45 мин · event</p>
+              </div>
+            </div>
+          </div>
+          <div class="connector"></div>
+          <div class="timeline-item">
+            <time>23:00</time>
+            <button class="check" data-complete aria-label="Mark done">✓</button>
+            <div class="slot">
+              <span class="task-icon pink">☾</span>
+              <div>
+                <strong>Сон</strong>
+                <p>8 ч · routine</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="groups">
+        <header class="compact-title">
+          <button class="round">♕</button>
+          <h2>Группы</h2>
+          <button class="round green-text">⊕</button>
+        </header>
+
+        <div class="segmented">
+          <button class="active">Группы</button>
+          <button>Моя группа</button>
+        </div>
+
+        <article class="card invite-card">
+          <h3>Приглашения (1)</h3>
+          <div class="task">
+            <span class="avatar small">S</span>
+            <div>
+              <strong>Product sprint</strong>
+              <p>Новая задача: Demo review</p>
+            </div>
+            <button class="pill gray">×</button>
+            <button class="pill green">✓</button>
+          </div>
+        </article>
+
+        <h3 class="section-heading">Что у групп</h3>
+        <article class="card feed-card">
+          <div class="feed-head">
+            <span class="avatar small">P</span>
+            <div><strong>Product sprint</strong><p>30 мин назад</p></div>
+            <span class="task-icon green">✓</span>
+          </div>
+          <p>Команда приняла задачу “Demo review”.</p>
+          <div class="reactions"><span>❤️ 2</span><span>👏</span><span>✨</span></div>
+        </article>
+        <article class="card group-row">
+          <span class="avatar small">M</span>
+          <div>
+            <strong>Morning club</strong>
+            <p>#morning · открытое вступление</p>
+          </div>
+          <span class="streak small-streak">🔥 12</span>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="profile">
+        <header class="compact-title">
+          <span></span>
+          <h2>Профиль</h2>
+          <button class="round" data-settings>⚙</button>
+        </header>
+
+        <article class="profile-card">
+          <div class="avatar huge">A<span>🔥 23</span></div>
+          <div>
+            <h2>Сашулька</h2>
+            <p>@sashulka_plan</p>
+            <strong>🎯 Стабильный день 4/5</strong>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-title"><h3>Бейджи</h3><span>9 / 20</span></div>
+          <div class="badges">
+            <div><span>⚡</span><strong>Фокус</strong></div>
+            <div><span>🔥</span><strong>Ритм</strong></div>
+            <div><span>🎙</span><strong>Голос</strong></div>
+          </div>
+        </article>
+
+        <article class="card stats-grid">
+          <h3>Путь</h3>
+          <div><strong>91</strong><small>задача</small></div>
+          <div><strong>47</strong><small>дней серии</small></div>
+          <div><strong>25</strong><small>фокусов</small></div>
+          <div><strong>8</strong><small>групповых</small></div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="settings">
+        <header class="compact-title">
+          <button class="round" data-profile>‹</button>
+          <h2>Настройки</h2>
+          <span></span>
+        </header>
+
+        <article class="card theme-card">
+          <div class="card-title"><h3>Цвет приложения</h3><span>выбран</span></div>
+          <div class="color-swatches" aria-label="App colors">
+            <button class="swatch active" style="--swatch: #2E8B57" aria-label="#2E8B57"></button>
+            <button class="swatch" style="--swatch: #FFDAB9" aria-label="#FFDAB9"></button>
+            <button class="swatch" style="--swatch: #5F9EA0" aria-label="#5F9EA0"></button>
+            <button class="swatch" style="--swatch: #EEE8AA" aria-label="#EEE8AA"></button>
+          </div>
+          <p>#2E8B57 · #FFDAB9 · #5F9EA0 · #EEE8AA</p>
+        </article>
+
+        <article class="card settings-list">
+          <h3><span class="task-icon green">≡</span> Профиль</h3>
+          <div class="setting"><span class="task-icon purple">◎</span><div><strong>Юзернейм</strong><p>@sashulka_plan</p></div><b>›</b></div>
+          <div class="setting"><span class="task-icon orange">☁</span><div><strong>iCloud sync</strong><p>Включено</p></div><b>›</b></div>
+          <div class="setting"><span class="task-icon pink">🔔</span><div><strong>Уведомления</strong><p>За 15 минут</p></div><b>›</b></div>
+          <div class="setting"><span class="task-icon green">G</span><div><strong>Google Calendar</strong><p>Подключить импорт</p></div><b>›</b></div>
+          <div class="setting"><span class="task-icon blue">🌐</span><div><strong>Язык</strong><p>Русский</p></div><b>›</b></div>
+        </article>
+
+        <article class="card settings-list">
+          <h3><span class="task-icon pink">↻</span> Повторения</h3>
+          <div class="setting"><span class="task-icon green">★</span><div><strong>Премиум</strong><p>Ежедневно, выбранные дни, ежемесячно</p></div><b>›</b></div>
+        </article>
+      </section>
+
+      <nav class="tabbar" aria-label="Main navigation">
+        <button class="tab active" data-tab="inbox"><span>☀</span><strong>Входящие</strong></button>
+        <button class="add-tab" data-add aria-label="Add task">+</button>
+        <button class="tab" data-tab="timeline"><span>▮▮▮</span><strong>Таймлайн</strong></button>
+        <button class="tab" data-tab="groups"><span>♟</span><strong>Группы</strong></button>
+        <button class="tab" data-tab="profile"><span>●</span><strong>Профиль</strong></button>
+      </nav>
+
+      <div class="scrim" data-close></div>
+      <section class="sheet" aria-label="Create task sheet">
+        <div class="grabber"></div>
+        <button class="close" data-close aria-label="Close">×</button>
+        <h2>Новая задача</h2>
+        <p>Если не выбрать дату и время, задача останется во входящих.</p>
+        <div class="type-grid">
+          <button class="type-card green"><span>✓</span><strong>Task</strong><small>Обычная задача</small></button>
+          <button class="type-card orange"><span>⌁</span><strong>Focus</strong><small>С таймером</small></button>
+          <button class="type-card blue"><span>◷</span><strong>Event</strong><small>По времени</small></button>
+          <button class="type-card pink"><span>↻</span><strong>Routine</strong><small>Повторение</small></button>
+        </div>
+        <form class="task-form">
+          <label>Название<input value="Разобрать входящие" /></label>
+          <label>Продолжительность<input value="30 мин" /></label>
+          <label>Дата и время<input placeholder="Сегодня, 18:00" /></label>
+          <label>Описание<textarea placeholder="Описание и подзадачи"></textarea></label>
+          <button type="button" class="primary" data-close>Создать</button>
+        </form>
+      </section>
+
+      <section class="focus-modal">
+        <button class="close dark" data-focus-close aria-label="Close">×</button>
+        <div class="focus-icon">⌁</div>
+        <h2>Глубокая работа</h2>
+        <p>Осталось</p>
+        <strong>42:18</strong>
+        <button data-focus-close>✓ Выполнено</button>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
