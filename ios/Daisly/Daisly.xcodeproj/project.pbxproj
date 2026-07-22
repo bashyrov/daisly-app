@@ -149,7 +149,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nWEB_SRC=\"$SRCROOT/../..\"\nWEB_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/web\"\nAPP_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$WEB_DST\"\ncp \"$WEB_SRC/index.html\" \"$WEB_DST/index.html\"\ncp \"$WEB_SRC/support.js\" \"$WEB_DST/support.js\"\ncp \"$WEB_SRC/ios-frame.jsx\" \"$WEB_DST/ios-frame.jsx\"\nif [ -d \"$WEB_SRC/vendor\" ]; then\n  mkdir -p \"$WEB_DST/vendor\"\n  cp -R \"$WEB_SRC/vendor/.\" \"$WEB_DST/vendor/\"\nfi\nif [ -d \"$WEB_SRC/uploads\" ]; then\n  mkdir -p \"$WEB_DST/uploads\"\n  cp -R \"$WEB_SRC/uploads/.\" \"$WEB_DST/uploads/\"\nfi\nif command -v xattr >/dev/null 2>&1; then\n  xattr -cr \"$APP_DST\"\nfi\n";
+			shellScript = "set -e\nWEB_SRC=\"$SRCROOT/../..\"\nWEB_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/web\"\nAPP_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$WEB_DST\"\ncp -X \"$WEB_SRC/index.html\" \"$WEB_DST/index.html\"\ncp -X \"$WEB_SRC/support.js\" \"$WEB_DST/support.js\"\ncp -X \"$WEB_SRC/ios-frame.jsx\" \"$WEB_DST/ios-frame.jsx\"\nif [ -d \"$WEB_SRC/vendor\" ]; then\n  mkdir -p \"$WEB_DST/vendor\"\n  cp -RX \"$WEB_SRC/vendor/.\" \"$WEB_DST/vendor/\"\nfi\nif [ -d \"$WEB_SRC/uploads\" ]; then\n  mkdir -p \"$WEB_DST/uploads\"\n  cp -RX \"$WEB_SRC/uploads/.\" \"$WEB_DST/uploads/\"\nfi\nif command -v xattr >/dev/null 2>&1; then\n  xattr -cr \"$WEB_DST\" || true\n  xattr -cr \"$APP_DST\" || true\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
