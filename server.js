@@ -671,7 +671,7 @@ async function appleJwks() {
   return appleJwksCache.keys;
 }
 
-async function verifyAppleIdentityToken(idToken) {
+async function verifyAppleIdentityToken(idToken, acceptedAudiences = [process.env.APPLE_SERVICES_ID]) {
   const parts = String(idToken || "").split(".");
   if (parts.length !== 3) return null;
   const header = parseJwtHeader(idToken);
@@ -688,9 +688,12 @@ async function verifyAppleIdentityToken(idToken) {
   verifier.end();
   if (!verifier.verify(publicKey, base64UrlBuffer(parts[2]))) return null;
 
+  const audiences = acceptedAudiences.filter(Boolean);
+  const tokenAudiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  const audienceMatches = audiences.some((audience) => tokenAudiences.includes(audience));
   if (
     payload.iss !== "https://appleid.apple.com" ||
-    payload.aud !== process.env.APPLE_SERVICES_ID ||
+    !audienceMatches ||
     Number(payload.exp || 0) * 1000 < Date.now()
   ) {
     return null;
@@ -1367,6 +1370,40 @@ async function handleAuth(req, res, url) {
       await writeDb(db);
     }
     return sendJson(res, 200, { ok: true });
+  }
+
+  if (url.pathname === "/auth/apple/native" && req.method === "POST") {
+    const body = await readBody(req);
+    const appleProfile = await verifyAppleIdentityToken(body.identityToken, [
+      process.env.APPLE_BUNDLE_ID,
+      process.env.APPLE_SERVICES_ID
+    ]);
+    if (!appleProfile) {
+      return sendJson(res, 401, { ok: false, error: "Apple profile could not be verified" });
+    }
+
+    const first = body.firstName || "";
+    const last = body.lastName || "";
+    const name = `${first} ${last}`.trim() || defaultUsernameFromEmail(appleProfile.email || "apple@daisly.app");
+    const db = await readDb();
+    const account = findOrCreateOAuthAccount(db, "apple", {
+      sub: appleProfile.sub,
+      email: appleProfile.email || body.email,
+      name
+    });
+    const userState = ensureAccountState(db, account, {
+      email: account.email,
+      name: account.displayName || name
+    });
+    userState.integrations.apple = {
+      provider: "apple",
+      email: account.email,
+      sub: appleProfile.sub,
+      connectedAt: new Date().toISOString()
+    };
+    db.users[account.id] = normalizeUserState(userState, db);
+    const sessionToken = await createSession(db, account);
+    return sendJson(res, 200, authResponse(db, account, sessionToken));
   }
 
   if (url.pathname === "/auth/google/callback" && req.method === "GET") {

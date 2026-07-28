@@ -1,4 +1,5 @@
 import AuthenticationServices
+import Foundation
 import SwiftUI
 import StoreKit
 import UIKit
@@ -77,6 +78,7 @@ struct DaislyWebView: UIViewRepresentable {
         configuration.userContentController.add(context.coordinator, name: "daislyStorage")
         configuration.userContentController.add(context.coordinator, name: "daislyNotifications")
         configuration.userContentController.add(context.coordinator, name: "daislyAuth")
+        configuration.userContentController.add(context.coordinator, name: "daislyStore")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         context.coordinator.webView = webView
@@ -141,7 +143,8 @@ struct DaislyWebView: UIViewRepresentable {
         return object["savedAt"] as? Double ?? 0
     }
 
-    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, UNUserNotificationCenterDelegate, ASWebAuthenticationPresentationContextProviding {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, UNUserNotificationCenterDelegate, ASWebAuthenticationPresentationContextProviding, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+        private let apiBaseURL = URL(string: "https://api.daisly.space")!
         private let monthlyProductID = "daisly_pro_monthly"
         private let yearlyProductID = "daisly_pro_yearly"
         private let notificationPrefix = "daisly-task-"
@@ -150,6 +153,7 @@ struct DaislyWebView: UIViewRepresentable {
         private var didNotifyReady = false
         private var authSession: ASWebAuthenticationSession?
         private var observesICloudStore = false
+        private var storeProducts: [String: Product] = [:]
 
         init(onReady: @escaping () -> Void) {
             self.onReady = onReady
@@ -169,6 +173,8 @@ struct DaislyWebView: UIViewRepresentable {
                 handleNotifications(message.body)
             case "daislyAuth":
                 handleAuth(message.body)
+            case "daislyStore":
+                handleStore(message.body)
             default:
                 break
             }
@@ -215,6 +221,18 @@ struct DaislyWebView: UIViewRepresentable {
         private func handleAuth(_ body: Any) {
             guard
                 let payload = body as? [String: Any],
+                let provider = payload["provider"] as? String
+            else {
+                completeAuth(error: "Could not start sign in")
+                return
+            }
+
+            if provider == "apple" {
+                startNativeAppleSignIn()
+                return
+            }
+
+            guard
                 let rawURL = payload["url"] as? String,
                 let url = URL(string: rawURL)
             else {
@@ -241,6 +259,63 @@ struct DaislyWebView: UIViewRepresentable {
             if !session.start() {
                 authSession = nil
                 completeAuth(error: "Could not start sign in")
+            }
+        }
+
+        private func startNativeAppleSignIn() {
+            let request = ASAuthorizationAppleIDProvider().createRequest()
+            request.requestedScopes = [.fullName, .email]
+
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = self
+            controller.presentationContextProvider = self
+            controller.performRequests()
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+            guard
+                let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                let identityTokenData = credential.identityToken,
+                let identityToken = String(data: identityTokenData, encoding: .utf8)
+            else {
+                completeAuth(error: "Apple profile could not be verified")
+                return
+            }
+
+            var payload: [String: String] = ["identityToken": identityToken]
+            if let authorizationCodeData = credential.authorizationCode,
+               let authorizationCode = String(data: authorizationCodeData, encoding: .utf8) {
+                payload["authorizationCode"] = authorizationCode
+            }
+            if let email = credential.email {
+                payload["email"] = email
+            }
+            if let firstName = credential.fullName?.givenName {
+                payload["firstName"] = firstName
+            }
+            if let lastName = credential.fullName?.familyName {
+                payload["lastName"] = lastName
+            }
+
+            Task {
+                do {
+                    let response = try await postJSON(path: "/auth/apple/native", payload: payload)
+                    guard let token = response["token"] as? String else {
+                        completeAuth(error: response["error"] as? String ?? "Could not sign in")
+                        return
+                    }
+                    injectAuthPayload(["authToken": token, "authProvider": "apple"])
+                } catch {
+                    completeAuth(error: "Could not sign in")
+                }
+            }
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+            if (error as? ASAuthorizationError)?.code == .canceled {
+                completeAuth(error: "Sign in cancelled")
+            } else {
+                completeAuth(error: "Could not sign in")
             }
         }
 
@@ -273,6 +348,27 @@ struct DaislyWebView: UIViewRepresentable {
             }
         }
 
+        private func postJSON(path: String, payload: [String: String]) async throws -> [String: Any] {
+            guard let url = URL(string: path, relativeTo: apiBaseURL)?.absoluteURL else {
+                throw URLError(.badURL)
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+            if !(200..<300).contains(statusCode) {
+                throw NSError(domain: "DaislyAPI", code: statusCode, userInfo: [
+                    NSLocalizedDescriptionKey: object["error"] as? String ?? "Request failed"
+                ])
+            }
+            return object
+        }
+
         private func publishNativeSnapshot() {
             let json = DaislyWebView.nativeStorageJSON()
             DispatchQueue.main.async { [weak self] in
@@ -284,12 +380,147 @@ struct DaislyWebView: UIViewRepresentable {
         }
 
         func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+            return presentationAnchor()
+        }
+
+        func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+            return presentationAnchor()
+        }
+
+        private func presentationAnchor() -> ASPresentationAnchor {
             if let window = webView?.window {
                 return window
             }
 
             let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             return scenes.flatMap(\.windows).first { $0.isKeyWindow } ?? UIWindow()
+        }
+
+        private func handleStore(_ body: Any) {
+            guard
+                let payload = body as? [String: Any],
+                let action = payload["action"] as? String
+            else {
+                publishStoreStatus(status: "error", message: "Purchase could not start")
+                return
+            }
+
+            switch action {
+            case "purchase":
+                let productID = payload["productId"] as? String
+                    ?? (payload["plan"] as? String == "month" ? monthlyProductID : yearlyProductID)
+                Task { await purchaseStoreProduct(productID: productID) }
+            case "restore":
+                Task { await restoreStorePurchases() }
+            case "refresh":
+                Task { await publishCurrentEntitlement() }
+            default:
+                publishStoreStatus(status: "error", message: "Purchase could not start")
+            }
+        }
+
+        private func purchaseStoreProduct(productID: String) async {
+            do {
+                let products = try await loadStoreProducts()
+                guard let product = products.first(where: { $0.id == productID }) else {
+                    publishStoreStatus(status: "error", productID: productID, message: "Subscription is not available")
+                    return
+                }
+
+                let result = try await product.purchase()
+                switch result {
+                case .success(let verification):
+                    let transaction = try checkVerified(verification)
+                    await transaction.finish()
+                    publishStoreStatus(status: "purchased", productID: transaction.productID, entitlementActive: true)
+                case .userCancelled:
+                    publishStoreStatus(status: "cancelled", productID: productID)
+                case .pending:
+                    publishStoreStatus(status: "pending", productID: productID, message: "Purchase pending")
+                @unknown default:
+                    publishStoreStatus(status: "error", productID: productID, message: "Purchase could not start")
+                }
+            } catch {
+                publishStoreStatus(status: "error", productID: productID, message: "Purchase could not start")
+            }
+        }
+
+        private func restoreStorePurchases() async {
+            do {
+                try await AppStore.sync()
+                let active = await hasActiveStoreEntitlement()
+                publishStoreStatus(
+                    status: active ? "restored" : "inactive",
+                    message: active ? nil : "No active subscription found",
+                    entitlementActive: active
+                )
+            } catch {
+                publishStoreStatus(status: "error", message: "Restore failed")
+            }
+        }
+
+        private func loadStoreProducts() async throws -> [Product] {
+            if storeProducts[monthlyProductID] != nil && storeProducts[yearlyProductID] != nil {
+                return [monthlyProductID, yearlyProductID].compactMap { storeProducts[$0] }
+            }
+
+            let products = try await Product.products(for: [monthlyProductID, yearlyProductID])
+            storeProducts = Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) })
+            return products
+        }
+
+        private func hasActiveStoreEntitlement() async -> Bool {
+            let ids = Set([monthlyProductID, yearlyProductID])
+            for await result in Transaction.currentEntitlements {
+                guard let transaction = try? checkVerified(result) else { continue }
+                if ids.contains(transaction.productID), transaction.revocationDate == nil {
+                    return true
+                }
+            }
+            return false
+        }
+
+        private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+            switch result {
+            case .verified(let value):
+                return value
+            case .unverified(_, let error):
+                throw error
+            }
+        }
+
+        private func publishCurrentEntitlement() async {
+            let active = await hasActiveStoreEntitlement()
+            publishStoreStatus(status: active ? "active" : "inactive", entitlementActive: active)
+        }
+
+        private func publishStoreStatus(status: String, productID: String? = nil, message: String? = nil, entitlementActive: Bool? = nil) {
+            var payload: [String: Any] = ["status": status]
+            if let productID {
+                payload["productId"] = productID
+            }
+            if let message {
+                payload["message"] = message
+            }
+            if let entitlementActive {
+                payload["entitlementActive"] = entitlementActive
+            }
+            injectStorePayload(payload)
+        }
+
+        private func injectStorePayload(_ payload: [String: Any]) {
+            guard
+                JSONSerialization.isValidJSONObject(payload),
+                let data = try? JSONSerialization.data(withJSONObject: payload),
+                let json = String(data: data, encoding: .utf8)
+            else { return }
+
+            DispatchQueue.main.async { [weak self] in
+                self?.webView?.evaluateJavaScript("""
+                window.__DAISLY_STORE_STATUS__ = \(json);
+                window.dispatchEvent(new CustomEvent('daislyStoreResult', { detail: window.__DAISLY_STORE_STATUS__ }));
+                """, completionHandler: nil)
+            }
         }
 
         private func handleNotifications(_ body: Any) {
@@ -409,7 +640,10 @@ struct DaislyWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             notifyReady()
-            Task { await publishStoreProducts(to: webView) }
+            Task {
+                await publishStoreProducts(to: webView)
+                await publishCurrentEntitlement()
+            }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -431,7 +665,7 @@ struct DaislyWebView: UIViewRepresentable {
 
         private func publishStoreProducts(to webView: WKWebView) async {
             do {
-                let products = try await Product.products(for: [monthlyProductID, yearlyProductID])
+                let products = try await loadStoreProducts()
                 let monthly = products.first(where: { $0.id == monthlyProductID })
                 let yearly = products.first(where: { $0.id == yearlyProductID })
                 let payload = StoreProductsPayload(

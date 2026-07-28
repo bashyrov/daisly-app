@@ -122,7 +122,7 @@ input[data-hero]::placeholder{color:rgba(255,255,255,0.8)}
   <sc-if value="{{ ob1 }}" hint-placeholder-val="{{ false }}">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:0">
     <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px">Welcome 👋</div>
-    <div style="font-size:15px;color:#7C8781;margin-top:6px;line-height:1.5">Sign in to sync your plan across iPhone, Android and Web.</div>
+    <div style="font-size:15px;color:#7C8781;margin-top:6px;line-height:1.5">Sign in to sync your plan across iPhone and Web.</div>
     <div style="background:rgba(255,255,255,0.72);border:1px solid rgba(28,44,34,0.08);border-radius:22px;padding:12px;margin-top:24px;box-shadow:0 10px 28px rgba(20,40,30,0.08);backdrop-filter:blur(16px);animation:softFormIn .42s cubic-bezier(.22,.9,.22,1)">
       <div style="display:flex;background:rgba(28,44,34,0.05);border-radius:16px;padding:3px;gap:3px">
         <div onClick="{{ authPickLogin }}" style="flex:1;text-align:center;border-radius:13px;background:{{ authLoginBg }};box-shadow:{{ authLoginSh }};color:{{ authLoginC }};font-size:13px;font-weight:850;padding:9px 6px;cursor:pointer;transition:background .32s ease,box-shadow .32s ease,color .25s ease">Sign in</div>
@@ -581,7 +581,7 @@ input[data-hero]::placeholder{color:rgba(255,255,255,0.8)}
           </div>
         </sc-if>
       </sc-for>
-      <div style="text-align:center;font-size:11px;font-weight:600;color:#C2CBC4;margin-top:16px">Daisly 1.0 · iPhone · Android · Web</div>
+      <div style="text-align:center;font-size:11px;font-weight:600;color:#C2CBC4;margin-top:16px">Daisly 1.0 · iPhone · Web</div>
     </div>
   </div>
   </sc-if>
@@ -1256,13 +1256,18 @@ input[data-hero]::placeholder{color:rgba(255,255,255,0.8)}
         </div>
       </div>
 
-      <div data-no-i18n="1" onClick="{{ pwBuy }}" style="margin-top:16px;text-align:center;background:var(--acc,#3E8E63);color:#FFFFFF;border-radius:22px;padding:17px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(30,70,50,0.25)" style-active="transform:scale(0.98)">{{ pwCta }}</div>
+      <div data-no-i18n="1" onClick="{{ pwBuy }}" style="margin-top:16px;text-align:center;background:var(--acc,#3E8E63);color:#FFFFFF;border-radius:22px;padding:17px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(30,70,50,0.25);opacity:{{ pwCtaOp }}" style-active="transform:scale(0.98)">{{ pwCta }}</div>
       <div style="display:flex;justify-content:center;gap:14px;margin-top:11px">
         <span style="font-size:11px;font-weight:700;color:#A5AFA8">7 days free</span>
         <span style="font-size:11px;font-weight:700;color:#C2CBC4">·</span>
         <span style="font-size:11px;font-weight:700;color:#A5AFA8">Cancel anytime</span>
         <span style="font-size:11px;font-weight:700;color:#C2CBC4">·</span>
-        <span style="font-size:11px;font-weight:700;color:var(--accD,#2F7351);cursor:pointer">Restore</span>
+        <span onClick="{{ pwRestore }}" style="font-size:11px;font-weight:700;color:var(--accD,#2F7351);cursor:pointer">Restore</span>
+      </div>
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:10px">
+        <span onClick="{{ openTerms }}" style="font-size:11px;font-weight:750;color:#7C8781;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Terms of Use</span>
+        <span style="font-size:11px;font-weight:700;color:#D3DBD5">·</span>
+        <span onClick="{{ openPrivacy }}" style="font-size:11px;font-weight:750;color:#7C8781;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Privacy Policy</span>
       </div>
     </div>
   </div>
@@ -1328,7 +1333,7 @@ class Component extends DCLogic {
         'Continue with Google': '使用 Google 继续',
         'Continue with Apple': '使用 Apple 继续',
         'Welcome 👋': '欢迎 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': '登录后可在 iPhone、Android 和网页同步计划。',
+        'Sign in to sync your plan across iPhone and Web.': '登录后可在 iPhone 和网页同步计划。',
         'What should we call you?': '我们该怎么称呼你？',
         'Your username is unique — friends find you by it in Groups.': '你的用户名是唯一的，朋友可在小组中找到你。',
         'Anchor your day': '固定你的一天',
@@ -1402,7 +1407,7 @@ class Component extends DCLogic {
         'Continue with Google': 'Google से जारी रखें',
         'Continue with Apple': 'Apple से जारी रखें',
         'Welcome 👋': 'स्वागत है 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'iPhone, Android और Web पर योजना सिंक करने के लिए साइन इन करें।',
+        'Sign in to sync your plan across iPhone and Web.': 'iPhone और Web पर योजना सिंक करने के लिए साइन इन करें।',
         'What should we call you?': 'हम आपको क्या कहें?',
         'Your username is unique — friends find you by it in Groups.': 'आपका username unique है — दोस्त Groups में इससे आपको ढूंढते हैं।',
         'Anchor your day': 'अपने दिन को आधार दें',
@@ -1476,7 +1481,7 @@ class Component extends DCLogic {
         'Continue with Google': 'Continuar con Google',
         'Continue with Apple': 'Continuar con Apple',
         'Welcome 👋': 'Bienvenido 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Inicia sesión para sincronizar tu plan en iPhone, Android y Web.',
+        'Sign in to sync your plan across iPhone and Web.': 'Inicia sesión para sincronizar tu plan en iPhone y Web.',
         'What should we call you?': '¿Cómo quieres que te llamemos?',
         'Your username is unique — friends find you by it in Groups.': 'Tu usuario es único: tus amigos te encuentran con él en Grupos.',
         'Anchor your day': 'Ancla tu día',
@@ -1537,7 +1542,7 @@ class Component extends DCLogic {
         'Continue with Google': 'Continuer avec Google',
         'Continue with Apple': 'Continuer avec Apple',
         'Welcome 👋': 'Bienvenue 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Connecte-toi pour synchroniser ton planning sur iPhone, Android et Web.',
+        'Sign in to sync your plan across iPhone and Web.': 'Connecte-toi pour synchroniser ton planning sur iPhone et Web.',
         'What should we call you?': 'Comment doit-on t’appeler ?',
         'Your username is unique — friends find you by it in Groups.': 'Ton identifiant est unique — tes amis te trouvent avec dans les groupes.',
         'Anchor your day': 'Ancre ta journée',
@@ -1598,7 +1603,7 @@ class Component extends DCLogic {
         'Continue with Google': 'المتابعة عبر Google',
         'Continue with Apple': 'المتابعة عبر Apple',
         'Welcome 👋': 'مرحباً 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'سجّل الدخول لمزامنة خطتك على iPhone و Android والويب.',
+        'Sign in to sync your plan across iPhone and Web.': 'سجّل الدخول لمزامنة خطتك على iPhone والويب.',
         'What should we call you?': 'بماذا نناديك؟',
         'Your username is unique — friends find you by it in Groups.': 'اسم المستخدم فريد — يجدك الأصدقاء به في المجموعات.',
         'Anchor your day': 'ثبّت يومك',
@@ -1693,7 +1698,7 @@ class Component extends DCLogic {
         'Continue with Google': 'Продолжить с Google',
         'Continue with Apple': 'Продолжить с Apple',
         'Welcome 👋': 'Добро пожаловать 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Войди, чтобы синхронизировать план на iPhone, Android и Web.',
+        'Sign in to sync your plan across iPhone and Web.': 'Войди, чтобы синхронизировать план на iPhone и Web.',
         'What should we call you?': 'Как тебя называть?',
         'Your username is unique — friends find you by it in Groups.': 'Твой username уникален — друзья найдут тебя по нему в группах.',
         'Anchor your day': 'Закрепи свой день',
@@ -1767,7 +1772,7 @@ class Component extends DCLogic {
         'Continue with Google': 'Продовжити з Google',
         'Continue with Apple': 'Продовжити з Apple',
         'Welcome 👋': 'Вітаємо 👋',
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Увійди, щоб синхронізувати план на iPhone, Android і Web.',
+        'Sign in to sync your plan across iPhone and Web.': 'Увійди, щоб синхронізувати план на iPhone і Web.',
         'What should we call you?': 'Як тебе називати?',
         'Your username is unique — friends find you by it in Groups.': 'Твій username унікальний — друзі знайдуть тебе за ним у групах.',
         'Anchor your day': 'Закріпи свій день',
@@ -1961,7 +1966,7 @@ class Component extends DCLogic {
         'Task updated': 'تم تحديث المهمة', 'Added to Inbox': 'أضيفت إلى الوارد', 'Task scheduled': 'تمت جدولة المهمة', 'No free window today': 'لا يوجد وقت فارغ اليوم', 'Done — nice!': 'تم — رائع!', 'Nice work!': 'عمل جيد!'
       },
       'বাংলা': {
-        'Sign in to sync your plan across iPhone, Android and Web.': 'iPhone, Android এবং Web-এ পরিকল্পনা সিঙ্ক করতে সাইন ইন করুন।', 'What should we call you?': 'আপনাকে কী নামে ডাকব?', 'Your username is unique — friends find you by it in Groups.': 'আপনার username ইউনিক — বন্ধুরা Groups-এ এটি দিয়ে আপনাকে খুঁজবে।', 'Anchor your day': 'দিনকে স্থির করুন', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Wake up এবং Sleep স্থায়ী রুটিন হবে — প্রতিদিন শুরু ও শেষ করবে।', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'Daisly আপনার ক্যালেন্ডারের উপর কাজ করে — ব্যস্ত সময় দেখায় এবং বাকি সময় সাজায়।',
+        'Sign in to sync your plan across iPhone and Web.': 'iPhone এবং Web-এ পরিকল্পনা সিঙ্ক করতে সাইন ইন করুন।', 'What should we call you?': 'আপনাকে কী নামে ডাকব?', 'Your username is unique — friends find you by it in Groups.': 'আপনার username ইউনিক — বন্ধুরা Groups-এ এটি দিয়ে আপনাকে খুঁজবে।', 'Anchor your day': 'দিনকে স্থির করুন', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Wake up এবং Sleep স্থায়ী রুটিন হবে — প্রতিদিন শুরু ও শেষ করবে।', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'Daisly আপনার ক্যালেন্ডারের উপর কাজ করে — ব্যস্ত সময় দেখায় এবং বাকি সময় সাজায়।',
         'Wake up': 'জাগা', '36 min left': '৩৬ মিনিট বাকি', 'Deep work': 'গভীর কাজ', 'Team sync': 'টিম সিঙ্ক', 'Calendar': 'ক্যালেন্ডার', 'Tasks': 'টাস্ক', 'Focus': 'ফোকাস', 'Routines': 'রুটিন', 'By continuing you agree to the Terms.': 'চালিয়ে গেলে আপনি শর্তে সম্মত হচ্ছেন।', 'We never post or edit anything without you.': 'আপনার অনুমতি ছাড়া আমরা কিছু পোস্ট বা এডিট করি না।', 'Every day · forever': 'প্রতিদিন · সবসময়', 'Sleep': 'ঘুম', 'Connect your tools': 'আপনার টুল যুক্ত করুন', 'Google Calendar': 'Google Calendar', 'Meetings, Meet links, reminders': 'মিটিং, Meet লিংক ও রিমাইন্ডার', 'Google Tasks': 'Google Tasks', 'Two-way status sync': 'দুই দিকের স্ট্যাটাস সিঙ্ক', 'Start planning': 'প্ল্যানিং শুরু করুন',
         'Discover': 'আবিষ্কার', 'Missed — tap to move': 'মিস হয়েছে — রি-প্ল্যান করতে ট্যাপ করুন', 'Auto-fit': 'অটো-ফিট', 'All clear': 'সব পরিষ্কার', 'Quick thoughts land here. Tap + to jot one down — schedule it later.': 'ঝটপট ভাবনা এখানে থাকে। + ট্যাপ করে লিখুন, পরে শিডিউল করুন।', 'My group': 'আমার গ্রুপ', 'Deep Work Club': 'ডিপ ওয়ার্ক ক্লাব', '@deepwork · 14 members': '@deepwork · ১৪ সদস্য', 'ACCEPTED': 'গৃহীত', 'PENDING': 'অপেক্ষায়', 'DECLINED': 'প্রত্যাখ্যাত', 'TODAY': 'আজ',
         'As admin you edit tasks, check them off and invite members. Changes sync to everyone who accepted.': 'অ্যাডমিন হিসেবে আপনি টাস্ক এডিট, চেক অফ এবং সদস্য আমন্ত্রণ করতে পারেন। পরিবর্তন গ্রহণকারীদের কাছে সিঙ্ক হবে।', 'Accept': 'গ্রহণ', 'Decline': 'প্রত্যাখ্যান', 'Invite again': 'আবার আমন্ত্রণ', 'Accepted group tasks land in your timeline. Only the group admin can edit them.': 'গৃহীত গ্রুপ টাস্ক আপনার টাইমলাইনে আসে। শুধু গ্রুপ অ্যাডমিন এডিট করতে পারে।',
@@ -1997,7 +2002,7 @@ class Component extends DCLogic {
         'Task updated': 'Завдання оновлено', 'Added to Inbox': 'Додано до вхідних', 'Task scheduled': 'Завдання заплановано', 'No free window today': 'Сьогодні немає вільного вікна', 'Done — nice!': 'Готово — чудово!', 'Nice work!': 'Гарна робота!', 'Time is busy': 'Час зайнятий'
       },
       'Português': {
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Entre para sincronizar seu plano no iPhone, Android e Web.', 'What should we call you?': 'Como devemos chamar você?', 'Your username is unique — friends find you by it in Groups.': 'Seu username é único — amigos encontram você por ele em Grupos.', 'Anchor your day': 'Fixe seu dia', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Acordar e Dormir viram rotinas permanentes para abrir e fechar cada dia.', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'O Daisly funciona sobre seu calendário: mostra quando você está ocupado e organiza o resto.',
+        'Sign in to sync your plan across iPhone and Web.': 'Entre para sincronizar seu plano no iPhone e Web.', 'What should we call you?': 'Como devemos chamar você?', 'Your username is unique — friends find you by it in Groups.': 'Seu username é único — amigos encontram você por ele em Grupos.', 'Anchor your day': 'Fixe seu dia', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Acordar e Dormir viram rotinas permanentes para abrir e fechar cada dia.', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'O Daisly funciona sobre seu calendário: mostra quando você está ocupado e organiza o resto.',
         'Wake up': 'Acordar', '36 min left': '36 min restantes', 'Deep work': 'Trabalho profundo', 'Team sync': 'Sync da equipe', 'Calendar': 'Calendário', 'Tasks': 'Tarefas', 'Focus': 'Foco', 'Routines': 'Rotinas', 'By continuing you agree to the Terms.': 'Ao continuar, você aceita os termos.', 'We never post or edit anything without you.': 'Nunca publicamos nem editamos nada sem você.', 'Every day · forever': 'Todos os dias · sempre', 'Sleep': 'Dormir', 'Connect your tools': 'Conecte suas ferramentas', 'Google Calendar': 'Google Agenda', 'Meetings, Meet links, reminders': 'Reuniões, links Meet e lembretes', 'Google Tasks': 'Google Tarefas', 'Two-way status sync': 'Sincronização de status em duas vias', 'Start planning': 'Começar a planejar',
         'Discover': 'Descobrir', 'Missed — tap to move': 'Perdida — toque para mover', 'Auto-fit': 'Autoajustar', 'All clear': 'Tudo limpo', 'Quick thoughts land here. Tap + to jot one down — schedule it later.': 'Ideias rápidas ficam aqui. Toque + para anotar e agendar depois.', 'My group': 'Meu grupo', 'Deep Work Club': 'Clube de trabalho profundo', '@deepwork · 14 members': '@deepwork · 14 membros', 'ACCEPTED': 'ACEITAS', 'PENDING': 'PENDENTES', 'DECLINED': 'RECUSADAS', 'TODAY': 'HOJE',
         'As admin you edit tasks, check them off and invite members. Changes sync to everyone who accepted.': 'Como admin, você edita tarefas, marca concluídas e convida membros. Mudanças sincronizam com quem aceitou.', 'Accept': 'Aceitar', 'Decline': 'Recusar', 'Invite again': 'Convidar novamente', 'Accepted group tasks land in your timeline. Only the group admin can edit them.': 'Tarefas de grupo aceitas entram na sua linha do tempo. Só o admin pode editá-las.',
@@ -2008,7 +2013,7 @@ class Component extends DCLogic {
         'Task updated': 'Tarefa atualizada', 'Added to Inbox': 'Adicionada à Entrada', 'Task scheduled': 'Tarefa agendada', 'No free window today': 'Sem horário livre hoje', 'Done — nice!': 'Concluído — ótimo!', 'Nice work!': 'Bom trabalho!'
       },
       'Bahasa Indonesia': {
-        'Sign in to sync your plan across iPhone, Android and Web.': 'Masuk untuk menyinkronkan rencanamu di iPhone, Android, dan Web.', 'What should we call you?': 'Kami harus memanggilmu apa?', 'Your username is unique — friends find you by it in Groups.': 'Username-mu unik — teman menemukanmu lewat itu di Grup.', 'Anchor your day': 'Tetapkan harimu', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Bangun dan Tidur menjadi rutinitas tetap untuk membuka dan menutup harimu.', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'Daisly berjalan di atas kalendermu: menunjukkan kapan kamu sibuk dan membantu mengatur sisanya.',
+        'Sign in to sync your plan across iPhone and Web.': 'Masuk untuk menyinkronkan rencanamu di iPhone dan Web.', 'What should we call you?': 'Kami harus memanggilmu apa?', 'Your username is unique — friends find you by it in Groups.': 'Username-mu unik — teman menemukanmu lewat itu di Grup.', 'Anchor your day': 'Tetapkan harimu', 'Wake up and Sleep become permanent routines — they\'ll open and close every day for you.': 'Bangun dan Tidur menjadi rutinitas tetap untuk membuka dan menutup harimu.', 'Daisly sits on top of your calendar — it shows where you\'re busy, and helps you live the rest.': 'Daisly berjalan di atas kalendermu: menunjukkan kapan kamu sibuk dan membantu mengatur sisanya.',
         'Wake up': 'Bangun', '36 min left': '36 menit tersisa', 'Deep work': 'Kerja mendalam', 'Team sync': 'Sinkron tim', 'Calendar': 'Kalender', 'Tasks': 'Tugas', 'Focus': 'Fokus', 'Routines': 'Rutinitas', 'By continuing you agree to the Terms.': 'Dengan melanjutkan, kamu menyetujui ketentuan.', 'We never post or edit anything without you.': 'Kami tidak pernah memposting atau mengedit apa pun tanpamu.', 'Every day · forever': 'Setiap hari · selamanya', 'Sleep': 'Tidur', 'Connect your tools': 'Hubungkan alatmu', 'Google Calendar': 'Google Kalender', 'Meetings, Meet links, reminders': 'Rapat, tautan Meet, dan pengingat', 'Google Tasks': 'Google Tasks', 'Two-way status sync': 'Sinkron status dua arah', 'Start planning': 'Mulai merencanakan',
         'Discover': 'Temukan', 'Missed — tap to move': 'Terlewat — ketuk untuk atur waktu', 'Auto-fit': 'Atur otomatis', 'All clear': 'Semua kosong', 'Quick thoughts land here. Tap + to jot one down — schedule it later.': 'Ide cepat masuk di sini. Ketuk + untuk mencatat, jadwalkan nanti.', 'My group': 'Grup saya', 'Deep Work Club': 'Klub kerja mendalam', '@deepwork · 14 members': '@deepwork · 14 anggota', 'ACCEPTED': 'DITERIMA', 'PENDING': 'MENUNGGU', 'DECLINED': 'DITOLAK', 'TODAY': 'HARI INI',
         'As admin you edit tasks, check them off and invite members. Changes sync to everyone who accepted.': 'Sebagai admin, kamu mengedit tugas, menandainya selesai, dan mengundang anggota. Perubahan tersinkron ke semua yang menerima.', 'Accept': 'Terima', 'Decline': 'Tolak', 'Invite again': 'Undang lagi', 'Accepted group tasks land in your timeline. Only the group admin can edit them.': 'Tugas grup yang diterima masuk ke linimasamu. Hanya admin grup yang bisa mengedit.',
@@ -2824,7 +2829,7 @@ class Component extends DCLogic {
         { id: 'r2', name: 'Leo', tag: '@leo', note: 'Found the group in Discover' }
       ],
       requested: {}, gTab: 'discover', gSearch: '', adminView: false,
-      pro: false, paywall: false, pwPlan: 'year', pendingThemeIdx: null,
+      pro: false, paywall: false, pwPlan: 'year', pendingThemeIdx: null, storeLoading: false,
       storeProducts: { monthly: null, yearly: null },
       sheet: null, sheetClosing: false, sheetStepMotion: null, detail: null, focus: null, confirm: null, toast: null, langSheet: false, langClosing: false,
       groupSheet: null, inviteSheet: false, inviteValue: '', requestsSheet: false,
@@ -2843,6 +2848,7 @@ class Component extends DCLogic {
     this.consumeAuthRedirect();
     this.loadBootstrap();
     this.bindStoreProducts();
+    this.bindStoreResults();
     this.bindNativeStorage();
     this.scheduleI18n();
     this.bindLiveInputs();
@@ -2866,6 +2872,7 @@ class Component extends DCLogic {
     clearTimeout(this._sheetStepTimer);
     clearTimeout(this._sheetCloseTimer);
     if (this._storePricesHandler) window.removeEventListener('daislyProductPrices', this._storePricesHandler);
+    if (this._storeResultHandler) window.removeEventListener('daislyStoreResult', this._storeResultHandler);
     if (this._nativeStorageHandler) window.removeEventListener('daislyNativeStorage', this._nativeStorageHandler);
     if (this._inboxDoneTimers) Object.keys(this._inboxDoneTimers).forEach(id => clearTimeout(this._inboxDoneTimers[id]));
     if (this._i18nFrame) cancelAnimationFrame(this._i18nFrame);
@@ -2954,12 +2961,19 @@ class Component extends DCLogic {
   }
 
   bindStoreProducts() {
-    if (!this._storePricesHandler) {
-      this._storePricesHandler = (event) => this.applyStoreProducts(event && event.detail);
-      window.addEventListener('daislyProductPrices', this._storePricesHandler);
-    }
-    if (window.__DAISLY_PRODUCT_PRICES__) this.applyStoreProducts(window.__DAISLY_PRODUCT_PRICES__);
-  }
+	    if (!this._storePricesHandler) {
+	      this._storePricesHandler = (event) => this.applyStoreProducts(event && event.detail);
+	      window.addEventListener('daislyProductPrices', this._storePricesHandler);
+	    }
+	    if (window.__DAISLY_PRODUCT_PRICES__) this.applyStoreProducts(window.__DAISLY_PRODUCT_PRICES__);
+	  }
+  bindStoreResults() {
+	    if (!this._storeResultHandler) {
+	      this._storeResultHandler = (event) => this.applyStoreResult(event && event.detail);
+	      window.addEventListener('daislyStoreResult', this._storeResultHandler);
+	    }
+	    if (window.__DAISLY_STORE_STATUS__) this.applyStoreResult(window.__DAISLY_STORE_STATUS__);
+	  }
   bindNativeStorage() {
     if (this._nativeStorageHandler) return;
     this._nativeStorageHandler = (event) => {
@@ -2972,7 +2986,7 @@ class Component extends DCLogic {
   }
 
   applyStoreProducts(payload) {
-    if (!payload || typeof payload !== 'object') return;
+	    if (!payload || typeof payload !== 'object') return;
     const clean = (product) => {
       if (!product || !product.displayPrice) return null;
       return {
@@ -2990,9 +3004,81 @@ class Component extends DCLogic {
       storeProducts: Object.assign({}, s.storeProducts || {}, {
         monthly: monthly || (s.storeProducts && s.storeProducts.monthly) || null,
         yearly: yearly || (s.storeProducts && s.storeProducts.yearly) || null
-      })
-    }));
-  }
+	      })
+	    }));
+	  }
+
+  applyStoreResult(payload) {
+	    if (!payload || typeof payload !== 'object') return;
+	    if (payload.products) this.applyStoreProducts(payload.products);
+	    const status = payload.status || '';
+	    const active = !!payload.entitlementActive || status === 'purchased' || status === 'restored' || status === 'active';
+	    if (active) {
+	      const pendingThemeIdx = this.state.pendingThemeIdx;
+	      const pendingTheme = pendingThemeIdx != null ? this.THEMES[pendingThemeIdx] : null;
+	      this.setState(s => ({
+	        pro: true,
+	        storeLoading: false,
+	        paywall: false,
+	        pendingThemeIdx: null,
+	        themeIdx: pendingTheme ? pendingThemeIdx : s.themeIdx
+	      }), () => {
+	        if (pendingTheme) this.apiSettingsPatch(this.state.set, pendingTheme.name);
+	      });
+	      this.toast(status === 'restored' || status === 'active' ? 'Daisly Pro restored' : 'Welcome to Daisly Pro');
+	      return;
+	    }
+	    if (status === 'cancelled') {
+	      this.setState({ storeLoading: false });
+	      return;
+	    }
+	    if (status === 'pending') {
+	      this.setState({ storeLoading: false });
+	      this.toast('Purchase pending');
+	      return;
+	    }
+	    if (status === 'inactive') {
+	      this.setState({ storeLoading: false });
+	      return;
+	    }
+	    this.setState({ storeLoading: false });
+	    this.toast(payload.message || 'Purchase could not start');
+	  }
+
+  storeProductId(plan) {
+	    const products = this.state.storeProducts || {};
+	    const product = plan === 'month' ? products.monthly : products.yearly;
+	    if (product && product.id) return product.id;
+	    return plan === 'month' ? 'daisly_pro_monthly' : 'daisly_pro_yearly';
+	  }
+
+  purchasePro() {
+	    if (this.state.storeLoading) return;
+	    const plan = this.state.pwPlan || 'year';
+	    const productId = this.storeProductId(plan);
+	    try {
+	      const handler = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daislyStore;
+	      if (window.__DAISLY_NATIVE__ && handler) {
+	        this.setState({ storeLoading: true });
+	        handler.postMessage({ action: 'purchase', plan, productId });
+	        return;
+	      }
+	    } catch (e) {}
+	    this.toast('Purchases are available in the iPhone app');
+	  }
+
+  restorePurchases() {
+	    if (this.state.storeLoading) return;
+	    try {
+	      const handler = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daislyStore;
+	      if (window.__DAISLY_NATIVE__ && handler) {
+	        this.setState({ storeLoading: true });
+	        handler.postMessage({ action: 'restore' });
+	        return;
+	      }
+	    } catch (e) {}
+	    this.toast('Restore is available in the iPhone app');
+	  }
 
   paywallCopy() {
     const lang = this.LANGS[this.state.set.langIdx] || 'English';
@@ -5610,19 +5696,12 @@ class Component extends DCLogic {
       pwYearPeriod: priceCopy.yearPeriod,
       pwMonthPeriod: priceCopy.monthPeriod,
       pwYearSub: this.paywallYearSub(yearlyProduct || { monthlyEquivalent: '$0.58' }),
-      pwCta: this.paywallCta(s.pwPlan, s.pwPlan === 'year' ? pwYearPrice : pwMonthPrice),
-      pwBuy: () => {
-        const pendingThemeIdx = s.pendingThemeIdx;
-        const pendingTheme = pendingThemeIdx != null ? this.THEMES[pendingThemeIdx] : null;
-        this.setState({
-          pro: true,
-          paywall: false,
-          pendingThemeIdx: null,
-          themeIdx: pendingTheme ? pendingThemeIdx : s.themeIdx
-        });
-        if (pendingTheme) this.apiSettingsPatch(s.set, pendingTheme.name);
-        this.toast('Welcome to Daisly Pro — trial started');
-      },
+	      pwCta: s.storeLoading ? 'Opening App Store…' : this.paywallCta(s.pwPlan, s.pwPlan === 'year' ? pwYearPrice : pwMonthPrice),
+	      pwCtaOp: s.storeLoading ? 0.72 : 1,
+	      pwBuy: () => this.purchasePro(),
+	      pwRestore: () => this.restorePurchases(),
+	      openTerms: () => this.openExternal('https://daisly.space/terms'),
+	      openPrivacy: () => this.openExternal('https://daisly.space/privacy'),
       // overlays
 	      detOpen: false, sheetOpen: false, repOpen: false, dcOpen: false, cOpen: false, focOpen: false,
       ipOpen: !!(s.iconPick && s.sheet), ipClose: () => this.setState({ iconPick: false }),
