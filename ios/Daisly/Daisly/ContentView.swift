@@ -147,6 +147,7 @@ struct DaislyWebView: UIViewRepresentable {
         private let apiBaseURL = URL(string: "https://api.daisly.space")!
         private let monthlyProductID = "daisly_pro_monthly"
         private let yearlyProductID = "daisly_pro_yearly"
+        private let subscriptionGroupID = "22221016"
         private let notificationPrefix = "daisly-task-"
         var onReady: () -> Void
         weak var webView: WKWebView?
@@ -409,7 +410,9 @@ struct DaislyWebView: UIViewRepresentable {
             case "purchase":
                 let productID = payload["productId"] as? String
                     ?? (payload["plan"] as? String == "month" ? monthlyProductID : yearlyProductID)
-                Task { await purchaseStoreProduct(productID: productID) }
+                Task { @MainActor [weak self] in
+                    self?.presentNativeSubscriptionStore(productID: productID)
+                }
             case "restore":
                 Task { await restoreStorePurchases() }
             case "refresh":
@@ -417,6 +420,46 @@ struct DaislyWebView: UIViewRepresentable {
             default:
                 publishStoreStatus(status: "error", message: "Purchase could not start")
             }
+        }
+
+        @MainActor
+        private func presentNativeSubscriptionStore(productID: String) {
+            guard #available(iOS 17.0, *) else {
+                Task { await purchaseStoreProduct(productID: productID) }
+                return
+            }
+
+            guard let presenter = presentingViewController() else {
+                Task { await purchaseStoreProduct(productID: productID) }
+                return
+            }
+
+            let view = DaislySubscriptionStoreSheet(subscriptionGroupID: subscriptionGroupID) { [weak self] status, purchasedProductID, active in
+                self?.publishStoreStatus(
+                    status: status,
+                    productID: purchasedProductID ?? productID,
+                    entitlementActive: active
+                )
+            }
+            let controller = UIHostingController(rootView: view)
+            controller.modalPresentationStyle = .pageSheet
+            presenter.present(controller, animated: true)
+        }
+
+        @MainActor
+        private func presentingViewController() -> UIViewController? {
+            let root = webView?.window?.rootViewController
+                ?? UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .flatMap(\.windows)
+                    .first { $0.isKeyWindow }?
+                    .rootViewController
+
+            var top = root
+            while let presented = top?.presentedViewController {
+                top = presented
+            }
+            return top
         }
 
         private func purchaseStoreProduct(productID: String) async {
@@ -728,6 +771,93 @@ struct DaislyWebView: UIViewRepresentable {
         let title: String
         let body: String
         let fireDate: Date
+    }
+}
+
+@available(iOS 17.0, *)
+private struct DaislySubscriptionStoreSheet: View {
+    let subscriptionGroupID: String
+    let onStatus: (String, String?, Bool?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var didReportResult = false
+
+    var body: some View {
+        SubscriptionStoreView(groupID: subscriptionGroupID) {
+            VStack(spacing: 10) {
+                DaislyAnimatedLogo(animate: true, appeared: true)
+                    .frame(width: 74, height: 74)
+                    .shadow(color: Color.daislySage.opacity(0.18), radius: 20, x: 0, y: 14)
+
+                Text("Unlock Daisly Pro")
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color.daislyInk)
+
+                Text("Repeats, groups, flexible planning and unlimited focus stats.")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.daislyInk.opacity(0.58))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 26)
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 12)
+        }
+        .subscriptionStorePolicyDestination(url: URL(string: "https://daisly.space/terms")!, for: .termsOfService)
+        .subscriptionStorePolicyDestination(url: URL(string: "https://daisly.space/privacy")!, for: .privacyPolicy)
+        .storeButton(.visible, for: .restorePurchases)
+        .subscriptionStoreControlStyle(.prominentPicker)
+        .onInAppPurchaseCompletion { product, result in
+            handlePurchaseCompletion(product: product, result: result)
+        }
+        .onDisappear {
+            guard !didReportResult else { return }
+            didReportResult = true
+            onStatus("cancelled", nil, nil)
+        }
+    }
+
+    private func handlePurchaseCompletion(product: Product, result: Result<Product.PurchaseResult, Error>) {
+        switch result {
+        case .success(let purchaseResult):
+            switch purchaseResult {
+            case .success(let verification):
+                do {
+                    let transaction = try checkVerified(verification)
+                    didReportResult = true
+                    Task {
+                        await transaction.finish()
+                        await MainActor.run {
+                            onStatus("purchased", transaction.productID, true)
+                            dismiss()
+                        }
+                    }
+                } catch {
+                    didReportResult = true
+                    onStatus("error", product.id, nil)
+                }
+            case .userCancelled:
+                didReportResult = true
+                onStatus("cancelled", product.id, nil)
+            case .pending:
+                didReportResult = true
+                onStatus("pending", product.id, nil)
+            @unknown default:
+                didReportResult = true
+                onStatus("error", product.id, nil)
+            }
+        case .failure:
+            didReportResult = true
+            onStatus("error", product.id, nil)
+        }
+    }
+
+    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+        switch result {
+        case .verified(let value):
+            return value
+        case .unverified(_, let error):
+            throw error
+        }
     }
 }
 
