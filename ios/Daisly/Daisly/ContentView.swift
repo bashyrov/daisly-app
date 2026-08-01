@@ -147,7 +147,7 @@ struct DaislyWebView: UIViewRepresentable {
         private let apiBaseURL = URL(string: "https://api.daisly.space")!
         private let monthlyProductID = "daisly_pro_monthly"
         private let yearlyProductID = "daisly_pro_yearly"
-        private let subscriptionGroupID = "22221016"
+        private let subscriptionProductIDs = ["daisly_pro_monthly", "daisly_pro_yearly"]
         private let notificationPrefix = "daisly-task-"
         var onReady: () -> Void
         weak var webView: WKWebView?
@@ -434,7 +434,10 @@ struct DaislyWebView: UIViewRepresentable {
                 return
             }
 
-            let view = DaislySubscriptionStoreSheet(subscriptionGroupID: subscriptionGroupID) { [weak self] status, purchasedProductID, active in
+            let view = DaislySubscriptionStoreSheet(
+                productIDs: subscriptionProductIDs,
+                preferredProductID: productID
+            ) { [weak self] status, purchasedProductID, active in
                 self?.publishStoreStatus(
                     status: status,
                     productID: purchasedProductID ?? productID,
@@ -466,7 +469,11 @@ struct DaislyWebView: UIViewRepresentable {
             do {
                 let products = try await loadStoreProducts()
                 guard let product = products.first(where: { $0.id == productID }) else {
-                    publishStoreStatus(status: "error", productID: productID, message: "Subscription is not available")
+                    publishStoreStatus(
+                        status: "error",
+                        productID: productID,
+                        message: "Could not connect to the App Store. Please try again."
+                    )
                     return
                 }
 
@@ -507,7 +514,15 @@ struct DaislyWebView: UIViewRepresentable {
                 return [monthlyProductID, yearlyProductID].compactMap { storeProducts[$0] }
             }
 
-            let products = try await Product.products(for: [monthlyProductID, yearlyProductID])
+            var products: [Product] = []
+            for attempt in 0..<3 {
+                products = try await Product.products(for: [monthlyProductID, yearlyProductID])
+                if !products.isEmpty { break }
+                if attempt < 2 {
+                    try await Task.sleep(nanoseconds: UInt64(attempt + 1) * 500_000_000)
+                }
+            }
+
             storeProducts = Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) })
             return products
         }
@@ -713,11 +728,14 @@ struct DaislyWebView: UIViewRepresentable {
                 let yearly = products.first(where: { $0.id == yearlyProductID })
                 let payload = StoreProductsPayload(
                     monthly: productPayload(from: monthly, period: "month"),
-                    yearly: productPayload(from: yearly, period: "year", monthlyEquivalent: monthlyEquivalent(for: yearly))
+                    yearly: productPayload(from: yearly, period: "year", monthlyEquivalent: monthlyEquivalent(for: yearly)),
+                    catalogAvailable: monthly != nil || yearly != nil
                 )
                 await MainActor.run { inject(payload, into: webView) }
             } catch {
-                await MainActor.run { inject(StoreProductsPayload(monthly: nil, yearly: nil), into: webView) }
+                await MainActor.run {
+                    inject(StoreProductsPayload(monthly: nil, yearly: nil, catalogAvailable: false), into: webView)
+                }
             }
         }
 
@@ -728,7 +746,8 @@ struct DaislyWebView: UIViewRepresentable {
                 displayName: product.displayName,
                 displayPrice: product.displayPrice,
                 period: period,
-                monthlyEquivalent: monthlyEquivalent
+                monthlyEquivalent: monthlyEquivalent,
+                hasFreeTrial: product.subscription?.introductoryOffer?.paymentMode == .freeTrial
             )
         }
 
@@ -756,6 +775,7 @@ struct DaislyWebView: UIViewRepresentable {
     private struct StoreProductsPayload: Codable {
         let monthly: StoreProductPayload?
         let yearly: StoreProductPayload?
+        let catalogAvailable: Bool
     }
 
     private struct StoreProductPayload: Codable {
@@ -764,6 +784,7 @@ struct DaislyWebView: UIViewRepresentable {
         let displayPrice: String
         let period: String
         let monthlyEquivalent: String?
+        let hasFreeTrial: Bool
     }
 
     private struct NativeNotificationItem {
@@ -776,14 +797,19 @@ struct DaislyWebView: UIViewRepresentable {
 
 @available(iOS 17.0, *)
 private struct DaislySubscriptionStoreSheet: View {
-    let subscriptionGroupID: String
+    let productIDs: [String]
+    let preferredProductID: String
     let onStatus: (String, String?, Bool?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var didReportResult = false
 
+    private var orderedProductIDs: [String] {
+        [preferredProductID] + productIDs.filter { $0 != preferredProductID }
+    }
+
     var body: some View {
-        SubscriptionStoreView(groupID: subscriptionGroupID) {
+        SubscriptionStoreView(productIDs: orderedProductIDs) {
             VStack(spacing: 10) {
                 DaislyAnimatedLogo(animate: true, appeared: true)
                     .frame(width: 74, height: 74)

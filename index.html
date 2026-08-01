@@ -1239,7 +1239,7 @@ input[data-hero]::placeholder{color:rgba(255,255,255,0.8)}
             <sc-if value="{{ pwIsYear }}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
           </div>
           <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14.5px;font-weight:800">Yearly</span><span style="font-size:9px;font-weight:800;letter-spacing:0.5px;color:#FFFFFF;background:var(--acc,#3E8E63);border-radius:7px;padding:2px 7px">SAVE 42%</span></div>
+            <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14.5px;font-weight:800">Yearly</span></div>
             <div data-no-i18n="1" style="font-size:11.5px;font-weight:700;color:#7C8781;margin-top:1px">{{ pwYearSub }}</div>
           </div>
           <div data-no-i18n="1" style="text-align:right"><span style="font-size:19px;font-weight:800">{{ pwYearPrice }}</span><span style="font-size:11.5px;font-weight:700;color:#A5AFA8"> {{ pwYearPeriod }}</span></div>
@@ -1258,8 +1258,10 @@ input[data-hero]::placeholder{color:rgba(255,255,255,0.8)}
 
       <div data-no-i18n="1" onClick="{{ pwBuy }}" style="margin-top:16px;text-align:center;background:var(--acc,#3E8E63);color:#FFFFFF;border-radius:22px;padding:17px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(30,70,50,0.25);opacity:{{ pwCtaOp }}" style-active="transform:scale(0.98)">{{ pwCta }}</div>
       <div style="display:flex;justify-content:center;gap:14px;margin-top:11px">
-        <span style="font-size:11px;font-weight:700;color:#A5AFA8">7 days free</span>
-        <span style="font-size:11px;font-weight:700;color:#C2CBC4">·</span>
+        <sc-if value="{{ pwHasTrial }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:11px;font-weight:700;color:#A5AFA8">7 days free</span>
+          <span style="font-size:11px;font-weight:700;color:#C2CBC4">·</span>
+        </sc-if>
         <span style="font-size:11px;font-weight:700;color:#A5AFA8">Cancel anytime</span>
         <span style="font-size:11px;font-weight:700;color:#C2CBC4">·</span>
         <span onClick="{{ pwRestore }}" style="font-size:11px;font-weight:700;color:var(--accD,#2F7351);cursor:pointer">Restore</span>
@@ -2994,7 +2996,8 @@ class Component extends DCLogic {
         displayName: product.displayName || '',
         displayPrice: product.displayPrice,
         period: product.period || '',
-        monthlyEquivalent: product.monthlyEquivalent || ''
+        monthlyEquivalent: product.monthlyEquivalent || '',
+        hasFreeTrial: !!product.hasFreeTrial
       };
     };
     const monthly = clean(payload.monthly);
@@ -3083,17 +3086,17 @@ class Component extends DCLogic {
   paywallCopy() {
     const lang = this.LANGS[this.state.set.langIdx] || 'English';
     const copy = {
-      English: { start: 'Start free trial', then: 'then', year: '/ year', month: '/ month', yearPeriod: '/ yr', monthPeriod: '/ mo', perMonth: 'per month, billed once', billedYear: 'billed once per year' },
-      '中文': { start: '开始免费试用', then: '之后', year: '/ 年', month: '/ 月', yearPeriod: '/ 年', monthPeriod: '/ 月', perMonth: '每月，一次性扣费', billedYear: '按年一次性扣费' },
-      'हिन्दी': { start: 'Free trial शुरू करें', then: 'फिर', year: '/ वर्ष', month: '/ माह', yearPeriod: '/ वर्ष', monthPeriod: '/ माह', perMonth: 'प्रति माह, एक बार बिल', billedYear: 'साल में एक बार बिल' },
-      'Español': { start: 'Iniciar prueba gratis', then: 'luego', year: '/ año', month: '/ mes', yearPeriod: '/ año', monthPeriod: '/ mes', perMonth: 'al mes, cobro único', billedYear: 'cobro anual único' },
-      'Français': { start: 'Démarrer l’essai gratuit', then: 'puis', year: '/ an', month: '/ mois', yearPeriod: '/ an', monthPeriod: '/ mois', perMonth: 'par mois, facturé une fois', billedYear: 'facturé une fois par an' },
-      'العربية': { start: 'ابدأ التجربة المجانية', then: 'ثم', year: '/ سنة', month: '/ شهر', yearPeriod: '/ سنة', monthPeriod: '/ شهر', perMonth: 'شهرياً، دفع مرة واحدة', billedYear: 'دفع سنوي مرة واحدة' },
-      'বাংলা': { start: 'ফ্রি ট্রায়াল শুরু করুন', then: 'তারপর', year: '/ বছর', month: '/ মাস', yearPeriod: '/ বছর', monthPeriod: '/ মাস', perMonth: 'প্রতি মাসে, একবার বিল', billedYear: 'বছরে একবার বিল' },
-      'Русский': { start: 'Начать бесплатный период', then: 'потом', year: '/ год', month: '/ мес', yearPeriod: '/ год', monthPeriod: '/ мес', perMonth: 'в месяц, оплата разом', billedYear: 'оплата один раз в год' },
-      'Українська': { start: 'Почати безкоштовний період', then: 'потім', year: '/ рік', month: '/ міс', yearPeriod: '/ рік', monthPeriod: '/ міс', perMonth: 'на місяць, оплата разом', billedYear: 'оплата один раз на рік' },
-      'Português': { start: 'Começar teste grátis', then: 'depois', year: '/ ano', month: '/ mês', yearPeriod: '/ ano', monthPeriod: '/ mês', perMonth: 'por mês, cobrado uma vez', billedYear: 'cobrado uma vez por ano' },
-      'Bahasa Indonesia': { start: 'Mulai uji coba gratis', then: 'lalu', year: '/ tahun', month: '/ bulan', yearPeriod: '/ tahun', monthPeriod: '/ bulan', perMonth: 'per bulan, ditagih sekali', billedYear: 'ditagih sekali per tahun' }
+      English: { start: 'Start free trial', subscribe: 'Subscribe', then: 'then', year: '/ year', month: '/ month', yearPeriod: '/ yr', monthPeriod: '/ mo', perMonth: 'per month, billed once', billedYear: 'billed once per year' },
+      '中文': { start: '开始免费试用', subscribe: '订阅', then: '之后', year: '/ 年', month: '/ 月', yearPeriod: '/ 年', monthPeriod: '/ 月', perMonth: '每月，一次性扣费', billedYear: '按年一次性扣费' },
+      'हिन्दी': { start: 'Free trial शुरू करें', subscribe: 'सदस्यता लें', then: 'फिर', year: '/ वर्ष', month: '/ माह', yearPeriod: '/ वर्ष', monthPeriod: '/ माह', perMonth: 'प्रति माह, एक बार बिल', billedYear: 'साल में एक बार बिल' },
+      'Español': { start: 'Iniciar prueba gratis', subscribe: 'Suscribirse', then: 'luego', year: '/ año', month: '/ mes', yearPeriod: '/ año', monthPeriod: '/ mes', perMonth: 'al mes, cobro único', billedYear: 'cobro anual único' },
+      'Français': { start: 'Démarrer l’essai gratuit', subscribe: 'S’abonner', then: 'puis', year: '/ an', month: '/ mois', yearPeriod: '/ an', monthPeriod: '/ mois', perMonth: 'par mois, facturé une fois', billedYear: 'facturé une fois par an' },
+      'العربية': { start: 'ابدأ التجربة المجانية', subscribe: 'اشترك', then: 'ثم', year: '/ سنة', month: '/ شهر', yearPeriod: '/ سنة', monthPeriod: '/ شهر', perMonth: 'شهرياً، دفع مرة واحدة', billedYear: 'دفع سنوي مرة واحدة' },
+      'বাংলা': { start: 'ফ্রি ট্রায়াল শুরু করুন', subscribe: 'সাবস্ক্রাইব করুন', then: 'তারপর', year: '/ বছর', month: '/ মাস', yearPeriod: '/ বছর', monthPeriod: '/ মাস', perMonth: 'প্রতি মাসে, একবার বিল', billedYear: 'বছরে একবার বিল' },
+      'Русский': { start: 'Начать бесплатный период', subscribe: 'Оформить подписку', then: 'потом', year: '/ год', month: '/ мес', yearPeriod: '/ год', monthPeriod: '/ мес', perMonth: 'в месяц, оплата разом', billedYear: 'оплата один раз в год' },
+      'Українська': { start: 'Почати безкоштовний період', subscribe: 'Оформити підписку', then: 'потім', year: '/ рік', month: '/ міс', yearPeriod: '/ рік', monthPeriod: '/ міс', perMonth: 'на місяць, оплата разом', billedYear: 'оплата один раз на рік' },
+      'Português': { start: 'Começar teste grátis', subscribe: 'Assinar', then: 'depois', year: '/ ano', month: '/ mês', yearPeriod: '/ ano', monthPeriod: '/ mês', perMonth: 'por mês, cobrado uma vez', billedYear: 'cobrado uma vez por ano' },
+      'Bahasa Indonesia': { start: 'Mulai uji coba gratis', subscribe: 'Berlangganan', then: 'lalu', year: '/ tahun', month: '/ bulan', yearPeriod: '/ tahun', monthPeriod: '/ bulan', perMonth: 'per bulan, ditagih sekali', billedYear: 'ditagih sekali per tahun' }
     };
     return copy[lang] || copy.English;
   }
@@ -3103,9 +3106,12 @@ class Component extends DCLogic {
     return product && product.monthlyEquivalent ? '≈ ' + product.monthlyEquivalent + ' ' + copy.perMonth : copy.billedYear;
   }
 
-  paywallCta(plan, price) {
+  paywallCta(plan, price, hasFreeTrial) {
     const copy = this.paywallCopy();
-    return copy.start + ' · ' + copy.then + ' ' + price + ' ' + (plan === 'year' ? copy.year : copy.month);
+    const period = plan === 'year' ? copy.year : copy.month;
+    return hasFreeTrial
+      ? copy.start + ' · ' + copy.then + ' ' + price + ' ' + period
+      : copy.subscribe + ' · ' + price + ' ' + period;
   }
 
   // ── helpers ──
@@ -5517,8 +5523,10 @@ class Component extends DCLogic {
     const yearlyProduct = storeProducts.yearly || null;
     const monthlyProduct = storeProducts.monthly || null;
     const priceCopy = this.paywallCopy();
-    const pwYearPrice = yearlyProduct && yearlyProduct.displayPrice ? yearlyProduct.displayPrice : '$7';
-    const pwMonthPrice = monthlyProduct && monthlyProduct.displayPrice ? monthlyProduct.displayPrice : '$1';
+    const pwYearPrice = yearlyProduct && yearlyProduct.displayPrice ? yearlyProduct.displayPrice : 'App Store';
+    const pwMonthPrice = monthlyProduct && monthlyProduct.displayPrice ? monthlyProduct.displayPrice : 'App Store';
+    const selectedStoreProduct = s.pwPlan === 'year' ? yearlyProduct : monthlyProduct;
+    const selectedHasFreeTrial = !!(selectedStoreProduct && selectedStoreProduct.hasFreeTrial);
 
     return Object.assign({
       themeVars: '--acc:' + th.acc + ';--accD:' + th.accD + ';--soft:' + th.soft + ';--bg:' + th.bg,
@@ -5695,8 +5703,9 @@ class Component extends DCLogic {
       pwMonthPrice,
       pwYearPeriod: priceCopy.yearPeriod,
       pwMonthPeriod: priceCopy.monthPeriod,
-      pwYearSub: this.paywallYearSub(yearlyProduct || { monthlyEquivalent: '$0.58' }),
-	      pwCta: s.storeLoading ? 'Opening App Store…' : this.paywallCta(s.pwPlan, s.pwPlan === 'year' ? pwYearPrice : pwMonthPrice),
+      pwYearSub: this.paywallYearSub(yearlyProduct || {}),
+      pwHasTrial: selectedHasFreeTrial,
+	      pwCta: s.storeLoading ? 'Opening App Store…' : this.paywallCta(s.pwPlan, s.pwPlan === 'year' ? pwYearPrice : pwMonthPrice, selectedHasFreeTrial),
 	      pwCtaOp: s.storeLoading ? 0.72 : 1,
 	      pwBuy: () => this.purchasePro(),
 	      pwRestore: () => this.restorePurchases(),
